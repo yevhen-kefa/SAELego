@@ -50,7 +50,7 @@
         <a href="https://github.com/Issam-BH/img2brick" target="_blank">View code on GitHub</a>
     </p>
 </footer>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

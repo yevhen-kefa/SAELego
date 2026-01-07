@@ -1,7 +1,10 @@
 <?php
 require_once __DIR__ . '/../Manager/LogManager.php';
+require_once __DIR__ . '/../Service/MosaicService.php';
+require_once __DIR__ . '/../Service/UserSession.php';
 
 class MosaicController {
+    
     public function upload() {
         if (!UserSession::isAuthenticated()) {
             header('Location: index.php?page=login');
@@ -41,7 +44,7 @@ class MosaicController {
         require __DIR__ . '/../../templates/home.php';
     }
 
-    public function preview($id) {
+public function preview($id) {
         if (!UserSession::isAuthenticated()) {
             header('Location: index.php?page=login');
             exit;
@@ -49,7 +52,8 @@ class MosaicController {
 
         $uploadId = $id;
         $pdo = Database::getInstance();
-        $stmt = $pdo->prepare("SELECT filename FROM uploads WHERE id_upload = ?");
+        $stmt = $pdo->prepare("SELECT * FROM uploads WHERE id_upload = ?");
+        
         $stmt->execute([$uploadId]);
         $image = $stmt->fetch();
 
@@ -59,31 +63,80 @@ class MosaicController {
         require __DIR__ . '/../../templates/preview.php';
     }
 
+    public function crop() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            
+            $json = file_get_contents('php://input');
+            $data = json_decode($json, true);
+
+            if (isset($data['image']) && isset($data['original_id'])) {
+                $imageParts = explode(";base64,", $data['image']);
+                $imageType = explode("image/", $imageParts[0])[1];
+                $imageBase64 = base64_decode($imageParts[1]);
+
+                $pdo = Database::getInstance();
+                $userId = UserSession::getUserId();
+
+                $sql = "INSERT INTO uploads (user_id, filename, image_data, image_type, uploaded_at) 
+                        VALUES (:uid, :fname, :data, :type, NOW())";
+                
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute([
+                    ':uid'   => $userId,
+                    ':fname' => 'cropped_' . uniqid() . '.' . $imageType,
+                    ':data'  => $imageBase64,
+                    ':type'  => 'image/' . $imageType
+                ]);
+
+                $newId = $pdo->lastInsertId();
+                header('Content-Type: application/json');
+                echo json_encode(['success' => true, 'new_id' => $newId]);
+                exit;
+            }
+        }
+        http_response_code(400);
+        echo json_encode(['success' => false, 'error' => 'Invalid data']);
+        exit;
+    }
+
     public function results() {
-        $variants = [];
-        $image = null;
+        if (!UserSession::isAuthenticated()) {
+            header('Location: index.php?page=login');
+            exit;
+        }
+
+        $bricks = []; 
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_upload'])) {
-
             $uploadId = $_POST['id_upload'];
-
-            $variants = [
-                ['name' => 'Bleu Profond', 'filter' => 'hue-rotate(180deg)', 'price' => 45.00],
-                ['name' => 'Rouge Vif',    'filter' => 'sepia(1) saturate(3) hue-rotate(-50deg)', 'price' => 48.00],
-                ['name' => 'Noir & Blanc', 'filter' => 'grayscale(100%)', 'price' => 35.00],
-            ];
-
             $pdo = Database::getInstance();
-            $stmt = $pdo->prepare("SELECT id_upload, filename FROM uploads WHERE id_upload = ?");
-            $stmt->execute([$uploadId]);
-            $image = $stmt->fetch();
 
-            if (!$image) {
+            $stmt = $pdo->prepare("SELECT image_data FROM uploads WHERE id_upload = ?");
+            $stmt->execute([$uploadId]);
+            $data = $stmt->fetchColumn();
+
+            if ($data) {
+                $tmpInputImg = sys_get_temp_dir() . '/input_' . uniqid() . '.jpg';
+                file_put_contents($tmpInputImg, $data);
+
+                $service = new MosaicService();
+                try {
+                    $bricks = $service->generateMosaic($tmpInputImg);
+                    require __DIR__ . '/../../templates/results.php';
+                    
+                } catch (Exception $e) {
+                    $logManager = new LogManager();
+                    $logManager->log('ERROR', "Erreur génération mosaïque : " . $e->getMessage());
+                    die("Une erreur est survenue lors de la génération de la mosaïque. Veuillez réessayer.");
+                } finally {
+                    if (file_exists($tmpInputImg)) {
+                        @unlink($tmpInputImg);
+                    }
+                }
+            } else {
                 header('Location: index.php?page=home');
                 exit;
             }
-            require __DIR__ . '/../../templates/results.php';
-
         } else {
             header('Location: index.php?page=home');
             exit;

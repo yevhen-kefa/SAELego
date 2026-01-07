@@ -1,10 +1,9 @@
 <?php
 session_start();
 
-require_once __DIR__ . '/../config/Database.php';
+require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../src/Service/UserSession.php';
 require_once __DIR__ . '/../src/Service/EmailService.php';
-
 require_once __DIR__ . '/../src/Controller/AuthController.php';
 require_once __DIR__ . '/../src/Controller/MosaicController.php';
 
@@ -62,7 +61,7 @@ switch ($page) {
         (new OrderController())->form();
         break;
 
-    case 'process_order':
+    case 'order_process':
         require_once __DIR__ . '/../src/Controller/OrderController.php';
         (new OrderController())->process();
         break;
@@ -85,6 +84,11 @@ switch ($page) {
     case 'reset_password':
         require_once __DIR__ . '/../src/Controller/AuthController.php';
         (new AuthController())->resetPassword();
+        break;
+
+    case 'crop':
+        $mosaicController = new MosaicController();
+        $mosaicController->crop();
         break;
 
     default:

@@ -1,39 +1,39 @@
 <?php ob_start(); ?>
-    <h2 class="mb-4">Here are your generated mosaics</h2>
+<h2 class="mb-4 text-center">Résultat de votre Mosaïque</h2>
 
-<?php if (!empty($variants) && isset($image)): ?>
-    <div class="row">
-        <?php foreach ($variants as $index => $variant): ?>
-            <div class="col-md-4 text-center">
-                <div class="card mb-4 shadow-sm h-100">
-                    <div class="card-body d-flex flex-column">
-                        <h5 class="card-title"><?= $variant['name'] ?></h5>
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-body text-center">
+                
+                <?php if (!empty($bricks)): ?>
+                    <svg viewBox="0 0 64 64" width="100%" height="auto" style="background: #eee; border: 1px solid #ccc;">
+                        <?php foreach ($bricks as $b): ?>
+                            <?php 
+                                $width = ($b['rot'] % 2 == 0) ? $b['w'] : $b['h'];
+                                $height = ($b['rot'] % 2 == 0) ? $b['h'] : $b['w'];
+                            ?>
+                            <rect x="<?= $b['x'] ?>" y="<?= $b['y'] ?>" width="<?= $width ?>" height="<?= $height ?>" fill="<?= $b['color'] ?>" stroke="#000" stroke-width="0.05"/>
+                        <?php endforeach; ?>
+                    </svg>
 
-                        <div style="overflow: hidden; border-radius: 5px;">
-                            <img src="image.php?id=<?= $image['id_upload'] ?>"
-                                 class="img-fluid"
-                                 style="filter: <?= $variant['filter'] ?>; width: 100%;">
-                        </div>
-
-                        <ul class="list-unstyled mt-3 mb-4 flex-grow-1">
-                            <li>Estimated price: <strong><?= $variant['price'] ?> €</strong></li>
-                        </ul>
-
-                        <form action="index.php?page=order" method="POST" class="mt-auto">
-                            <input type="hidden" name="id_upload" value="<?= $image['id_upload'] ?>">
-                            <input type="hidden" name="filter" value="<?= htmlspecialchars($variant['filter']) ?>">
-                            <input type="hidden" name="price" value="<?= $variant['price'] ?>">
+                    <div class="mt-4">
+                        <h4>Détails</h4>
+                        <p>Nombre de briques : <?= count($bricks) ?></p>
+                        
+                        <form action="index.php?page=order" method="POST">
+                            <input type="hidden" name="id_upload" value="<?= $uploadId ?>">
+                            <input type="hidden" name="brick_data" value="<?= htmlspecialchars(json_encode($bricks)) ?>">
+                            <input type="hidden" name="price" value="<?= count($bricks) * 0.10 ?>">
                             <input type="hidden" name="size" value="64">
-                            <button type="submit" class="btn btn-outline-primary w-100">Order</button>
+                            <button type="submit" class="btn btn-primary btn-lg mt-2">Commander les pièces</button>
                         </form>
                     </div>
-                </div>
+                <?php else: ?>
+                    <div class="alert alert-danger">La génération a échoué.</div>
+                <?php endif; ?>
             </div>
-        <?php endforeach; ?>
+        </div>
     </div>
-<?php else: ?>
-    <div class="alert alert-warning">No results to display. Please restart the upload process.</div>
-    <a href="index.php?page=home" class="btn btn-primary">Back to Home</a>
-<?php endif; ?>
-
+</div>
 <?php $content = ob_get_clean(); require __DIR__ . '/layout.php'; ?>
