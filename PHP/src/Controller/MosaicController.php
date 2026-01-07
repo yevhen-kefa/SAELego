@@ -142,4 +142,63 @@ public function preview($id) {
             exit;
         }
     }
+
+    public function download() {
+    if (!UserSession::isAuthenticated()) {
+        header('Location: index.php?page=login');
+        exit;
+    }
+
+    $type = $_POST['type'] ?? '';
+    $json = $_POST['brick_data'] ?? '[]';
+    $bricks = json_decode($json, true);
+
+    if (empty($bricks)) {
+        die("Aucune donnée de mosaïque à télécharger.");
+    }
+
+    if ($type === 'csv') {
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="liste_pieces_lego.csv"');
+
+        $out = fopen('php://output', 'w');
+        fputcsv($out, ['Dimension (LxH)', 'Couleur (Hex)', 'Quantité']);
+        $stats = [];
+        foreach ($bricks as $b) {
+            $key = $b['w'] . 'x' . $b['h'] . '_' . $b['color'];
+            
+            if (!isset($stats[$key])) {
+                $stats[$key] = [
+                    'dim' => $b['w'] . ' x ' . $b['h'],
+                    'col' => $b['color'],
+                    'qty' => 0
+                ];
+            }
+            $stats[$key]['qty']++;
+        }
+        foreach ($stats as $row) {
+            fputcsv($out, [$row['dim'], $row['col'], $row['qty']]);
+        }
+        fclose($out);
+        exit;
+
+    } elseif ($type === 'svg') {
+        header('Content-Type: image/svg+xml');
+        header('Content-Disposition: attachment; filename="mosaique_finale.svg"');
+        echo '<?xml version="1.0" encoding="UTF-8"?>';
+        echo '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="1024" height="1024">';
+        
+        foreach ($bricks as $b) {
+            $width = ($b['rot'] % 2 == 0) ? $b['w'] : $b['h'];
+            $height = ($b['rot'] % 2 == 0) ? $b['h'] : $b['w'];
+            
+            echo sprintf(
+                '<rect x="%s" y="%s" width="%s" height="%s" fill="%s" stroke="#000" stroke-width="0.05"/>',
+                $b['x'], $b['y'], $width, $height, $b['color']
+            );
+        }
+        echo '</svg>';
+        exit;
+    }
+}
 }

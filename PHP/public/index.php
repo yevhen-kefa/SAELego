@@ -91,6 +91,11 @@ switch ($page) {
         $mosaicController->crop();
         break;
 
+    case 'download':
+        $controller = new MosaicController();
+        $controller->download();
+        break;
+
     default:
         http_response_code(404);
         echo "<div style='text-align:center; margin-top:50px; font-family:sans-serif;'>";
