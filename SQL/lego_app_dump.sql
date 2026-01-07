@@ -609,6 +609,7 @@ CREATE TABLE `mosaic` (
   `filter_used` varchar(50) NOT NULL,
   `size_option` int(11) NOT NULL,
   `estimated_price` decimal(10,2) NOT NULL,
+  `brick_data` longtext DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
