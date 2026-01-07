@@ -157,7 +157,7 @@ class AuthController {
             $email = $_POST['email'];
             $pdo = Database::getInstance();
 
-            $stmt = $pdo->prepare("SELECT id_user, username FROM users WHERE email = ?");
+            $stmt = $pdo->prepare("SELECT user_id, nickname FROM users WHERE email = ?");
             $stmt->execute([$email]);
             $user = $stmt->fetch();
 
@@ -165,12 +165,12 @@ class AuthController {
                 $token = bin2hex(random_bytes(32));
                 $expires = date('Y-m-d H:i:s', strtotime('+1 hour'));
 
-                $stmt = $pdo->prepare("UPDATE users SET reset_token = ?, reset_expires_at = ? WHERE id_user = ?");
-                $stmt->execute([$token, $expires, $user['id_user']]);
+                $stmt = $pdo->prepare("UPDATE users SET reset_token = ?, reset_expires_at = ? WHERE user_id = ?");
+                $stmt->execute([$token, $expires, $user['user_id']]);
 
                 $resetLink = "https://etudiant.univ-eiffel.fr/~issam.ben-hamouda/index.php?page=reset_password&token=" . $token;
 
-                $body = "Hi " . htmlspecialchars($user['username']) . ",<br>To reset your password, click here: <a href='$resetLink'>Reset Password</a><br>This link expires in 1 hour.";
+                $body = "Hi " . htmlspecialchars($user['nickname']) . ",<br>To reset your password, click here: <a href='$resetLink'>Reset Password</a><br>This link expires in 1 hour.";
 
                 if (EmailService::sendEmail($email, "Password Reset", $body)) {
                     $message = "A reset link has been sent to your email.";
@@ -187,7 +187,7 @@ class AuthController {
     public function resetPassword() {
         $token = $_GET['token'] ?? '';
         $pdo = Database::getInstance();
-        $stmt = $pdo->prepare("SELECT id_user FROM users WHERE reset_token = ? AND reset_expires_at > NOW()");
+        $stmt = $pdo->prepare("SELECT user_id FROM users WHERE reset_token = ? AND reset_expires_at > NOW()");
         $stmt->execute([$token]);
         $user = $stmt->fetch();
 
@@ -199,8 +199,8 @@ class AuthController {
             $newPassword = $_POST['password'];
             if (strlen($newPassword) >= 12) {
                 $hash = password_hash($newPassword, PASSWORD_DEFAULT);
-                $stmt = $pdo->prepare("UPDATE users SET password = ?, reset_token = NULL, reset_expires_at = NULL WHERE id_user = ?");
-                $stmt->execute([$hash, $user['id_user']]);
+                $stmt = $pdo->prepare("UPDATE users SET password = ?, reset_token = NULL, reset_expires_at = NULL WHERE user_id = ?");
+                $stmt->execute([$hash, $user['user_id']]);
                 header('Location: index.php?page=login&reset=success');
                 exit;
             } else {

@@ -6,7 +6,7 @@ class Database {
     private function __construct() {
         // --- CONFIGURATION À REMPLIR ---
         $host = 'localhost';        // Souvent 'localhost' ou '127.0.0.1'
-        $db   = 'img2brick_2';      // Le nom de votre base de données
+        $db   = 'lego_app';      // Le nom de votre base de données
         $user = 'root';             // Votre utilisateur MySQL
         $pass = '';                 // Votre mot de passe (laissez vide pour XAMPP par défaut)
         $charset = 'utf8mb4';

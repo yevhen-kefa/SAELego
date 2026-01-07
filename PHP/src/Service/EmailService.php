@@ -20,8 +20,9 @@ class EmailService {
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
             $mail->Port       = $config['smtp_port'];
             $mail->CharSet    = 'UTF-8';
-
-            $mail->setFrom($config['smtp_user'], "IMG2BRICK - Equipe Officielle");
+            $fromEmail = $config['from_email'] ?? $config['smtp_user'];
+            $fromName  = $config['from_name'] ?? 'IMG2BRICK';
+            $mail->setFrom($fromEmail, $fromName);
             $mail->addAddress($to);
             $mail->isHTML(true);
             $mail->Subject = $subject;
@@ -31,22 +32,21 @@ class EmailService {
             $mail->send();
             return true;
         } catch (Exception $e) {
-            error_log("PHPMailer Error: " . $e->getMessage());
+            error_log("Erreur d'envoi email : {$mail->ErrorInfo}");
             return false;
         }
     }
 
     public static function send2FACode($email, $code) {
-        $subject = "Votre code de connexion - img2brick";
-
+        $subject = "Votre code de connexion - SAELego";
         $body = "
         <div style='font-family: Arial, sans-serif; color: #333;'>
             <h2>Bonjour,</h2>
-            <p>Voici votre code de vérification pour vous connecter à <strong>img2brick</strong> :</p>
+            <p>Voici votre code de vérification pour vous connecter à <strong>SAELego</strong> :</p>
             <h1 style='color: #0d6efd; letter-spacing: 5px;'>$code</h1>
             <p>Ce code est valable <strong>1 minute</strong>.</p>
             <hr>
-            <small>Ceci est un email automatique du projet universitaire img2brick.</small>
+            <small>Ceci est un email automatique du projet universitaire SAELego.</small>
         </div>";
 
         return self::sendEmail($email, $subject, $body);
