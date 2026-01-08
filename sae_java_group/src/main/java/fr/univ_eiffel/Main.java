@@ -110,7 +110,7 @@ public class Main {
                     for (Map.Entry<String, Integer> entry : formattedItems.entrySet()) {
                          String[] parts = entry.getKey().split("/");
                          if(parts.length == 2) {
-                             String brickName = parts[0]; // "1-1"
+                             String brickName = parts[0];
                              try {
                                  System.out.println("Added to DB: " + brickName + " (" + parts[1] + ") x " + entry.getValue());
                              } catch (Exception e) {
