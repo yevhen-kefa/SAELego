@@ -44,7 +44,7 @@ The system follows a modular architecture where each language is used for its sp
 ---
 
 ## 📂 Project Structure
-
+```text
 SAELEGO/
 ├── C/                      # Optimization Algorithm
 │   └── pavage.c            # Core C solver logic
@@ -59,6 +59,7 @@ SAELEGO/
 │   └── bricks.txt          # Brick shapes reference
 └── SQL/                    # Database Scripts
     └── dmp_lego_app.sql    # Initial database schema and data
+```
 
 
 
